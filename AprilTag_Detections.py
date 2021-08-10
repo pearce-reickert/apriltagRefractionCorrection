@@ -3,6 +3,7 @@ from dt_apriltags import Detection
 from datetime import datetime
 import math
 import aprilTagLocations as atl
+import matplotlib.pyplot as plt
 
 def LinePlaneCollision(planeNormal, planePoint, rayDirection, rayPoint, epsilon=1e-6):
     ndotu = planeNormal.dot(rayDirection)
@@ -13,6 +14,19 @@ def LinePlaneCollision(planeNormal, planePoint, rayDirection, rayPoint, epsilon=
     si = -planeNormal.dot(w) / ndotu
     Psi = w + si * rayDirection + planePoint
     return Psi
+
+def PlotApriltagHomography(ax,H):
+    #H is a 4x4 homography matrix
+    #a-d are the 4 tag corners, e is 1 in the z direction, o is the origin
+    s = 0.074
+    D = np.array([[0,0,0,1],[0,0,s,1],[s,s,0,1],[-s,s,0,1],[-s,-s,0,1],[s,-s,0,1]]).T
+    HD = np.matmul(H,D)
+    #print(H)
+    #print(D)
+    #print(HD)
+    #print()
+    
+    return HD[0,:],HD[1,:],HD[2,:]
 
 class Detections():
     def __init__(self):
@@ -28,6 +42,7 @@ class Detections():
         self.water_point = np.array([0,0,0.01])
         self.water_normal = np.array([0,0,-1])
         
+        self.acrylic_index = 1.491
         self.air_index = 1
         self.water_index = 1.333
         self.n = self.air_index/self.water_index
@@ -117,6 +132,23 @@ class Detections():
                 
         self.corrected_matrix[AT.tag_id] = cam_in_world_frame2
     
+    def ticf_raw(self,num):
+        p_R = np.array(self.Tags[num].pose_R)
+        p = np.matrix(self.locs[num]).T
+        #print(p_R)
+        #print(p)
+        #print(atl.RpToTf(p_R,p))
+        #print()
+        return atl.RpToTf(p_R,p)
+    
+    def ticf_corrected(self,num):
+        p_R = np.array(self.Tags[num].pose_R)
+        p = np.matrix(self.corrected_locs[num]).T
+        #print(p_R)
+        #print(p)
+        #print(atl.RpToTf(p_R,p))
+        #print()
+        return atl.RpToTf(p_R,p)
     
     def correct(self,wrong_loc):
         #takes wrong_loc, a 3 element vector and corrects for refraction due to the water's surface
@@ -149,7 +181,8 @@ class Detections():
 #         print('true loc:          ',true_loc)
         
         return true_loc
-        
+           
+    
     def cam_from_3d(self,P):
         
         w = 1600

@@ -38,8 +38,8 @@ def eul2rotm(eul):
 def RpToTf(R,p):
     tf = np.eye(4)
     tf[0:3,0:3]=R
-    tf[:3,3]=p[:,0]
-    tf[:3,3][np.abs(tf[:3,3])<1e-3]=0
+    tf[0:3,[3]]=p[:3,0]
+    tf[0:3,[3]][np.abs(tf[:3,3])<1e-3]=0
     tf[np.abs(tf)<1e-9]=0
     return tf
 

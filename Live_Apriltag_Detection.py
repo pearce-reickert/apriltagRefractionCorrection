@@ -45,7 +45,7 @@ pool = []
 global prev_fp
 
 
-filepath='/home/pi/Desktop/Apriltag_refraction_correction'
+filepath='/home/pi/Desktop/apriltagRefractionCorrection'
 
 with open(filepath + '/AT_info.yaml', 'r') as stream:
     parameters = yaml.load(stream)
@@ -62,13 +62,13 @@ ATs = atd.Detections()
 def extract_Apriltags(image, at_detector, visualization):
     grayscale_image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
     
-    cameraMatrix = np.array(parameters['dated_test']['K']).reshape((3,3))
+    cameraMatrix = np.array(parameters['tank_experiment_1']['K']).reshape((3,3))
     camera_params = ( cameraMatrix[0,0], cameraMatrix[1,1], cameraMatrix[0,2], cameraMatrix[1,2] )
 
     #print("Detecting AprilTags...")
     img = grayscale_image #cv2.imread(ab_path, cv2.IMREAD_GRAYSCALE)
 
-    tags = at_detector.detect(img, True, camera_params, parameters['dated_test']['tag_size'])
+    tags = at_detector.detect(img, True, camera_params, parameters['tank_experiment_1']['tag_size'])
 
     #tag_ids = [tag.tag_id for tag in tags]
     #print(len(tags), " tags found: ", tag_ids)
@@ -130,7 +130,7 @@ def extract_Apriltags(image, at_detector, visualization):
     fpn = ATs.fp+'_'+str(ATs.fp_idx)
 
     
-    with open(ATs.fp+'Data.pkl','wb') as outp:
+    with open(fpn+'Data.pkl','wb') as outp:
         pickle.dump(ATs,outp,-1)
     cv2.imwrite(fpn+'Image.png',color_img)
     

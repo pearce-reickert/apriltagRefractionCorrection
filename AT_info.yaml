@@ -15,6 +15,15 @@ webcam:
   height: 896
   width: 1600
   
+  
+#  K: [610.193, 0.0, 320.358, 0.0, 611.0993, 232.231, 0.0, 0.0, 1.0]
+
+tank_experiment_1:
+  K: [513.12754877,0,327.83036606,0,506.78605361, 341.037295, 0,0,1]
+  tag_size: 0.148
+  height: 480
+  width: 640
+
 # [336.7755634193813, 0.0, 333.3575643300718, 0.0, 336.02729840829176, 212.77376312080065, 0.0, 0.0, 1.0]
 #Rotation test_files images by Xiaohan-Wang (https://github.com/Xiaohan-Wang/apriltag2_detection)
 #rotation_test:
