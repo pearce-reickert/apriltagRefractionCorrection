@@ -132,7 +132,7 @@ def extract_Apriltags(image, at_detector, visualization):
     
     with open(fpn+'Data.pkl','wb') as outp:
         pickle.dump(ATs,outp,-1)
-    cv2.imwrite(fpn+'Image.png',color_img)
+    cv2.imwrite(fpn+'Image.png',image)
     
     
     ATs.reset_update()

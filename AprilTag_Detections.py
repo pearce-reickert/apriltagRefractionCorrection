@@ -3,7 +3,7 @@ from dt_apriltags import Detection
 from datetime import datetime
 import math
 import aprilTagLocations as atl
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def LinePlaneCollision(planeNormal, planePoint, rayDirection, rayPoint, epsilon=1e-6):
     ndotu = planeNormal.dot(rayDirection)
@@ -15,7 +15,7 @@ def LinePlaneCollision(planeNormal, planePoint, rayDirection, rayPoint, epsilon=
     Psi = w + si * rayDirection + planePoint
     return Psi
 
-def PlotApriltagHomography(ax,H):
+def PlotApriltagHomography(H,justcenter=False):
     #H is a 4x4 homography matrix
     #a-d are the 4 tag corners, e is 1 in the z direction, o is the origin
     s = 0.074
@@ -25,6 +25,9 @@ def PlotApriltagHomography(ax,H):
     #print(D)
     #print(HD)
     #print()
+    
+    if(justcenter):
+        return HD[0,0],HD[1,0],HD[2,0]
     
     return HD[0,:],HD[1,:],HD[2,:]
 
@@ -54,14 +57,19 @@ class Detections():
         self.fp_idx = 0
         
         #self.written = [False for i in range(50)]
-        tag_ids = [tag.tag_id for tag in self.Tags]
-        print(len(self.Tags), " tags found: ", tag_ids)
+        #tag_ids = [tag.tag_id for tag in self.Tags]
+        #print(len(self.Tags), " tags found: ", tag_ids)
+    
+    def custom_index(self,n1,n2):
+        self.air_index = n1
+        self.water_index = n2
+        self.n = self.air_index/self.water_index
     
     def snell(self,s1):
         N = self.water_normal/np.linalg.norm(self.water_normal)
         s1 = s1/np.linalg.norm(s1)
         n = self.n
-        #print(type(n))
+        print(n)
         Nxs1 = np.cross(N,s1)
         t = np.dot(Nxs1,Nxs1)
         #print(n**2)
@@ -128,7 +136,7 @@ class Detections():
         #print(atl.tfToVec(cam_in_world_frame))
         #print(atl.tfToVec(cam_in_world_frame2))
         #print(cam_in_world_frame)
-        print(cam_in_world_frame2)
+        #print(cam_in_world_frame2)
                 
         self.corrected_matrix[AT.tag_id] = cam_in_world_frame2
     
@@ -150,6 +158,39 @@ class Detections():
         #print()
         return atl.RpToTf(p_R,p)
     
+    def error_vector(self,num,ciwf):
+        P0 = np.array(PlotApriltagHomography(atl.idMap[num],True))
+        Pr = np.array(PlotApriltagHomography(np.matmul(ciwf,self.ticf_raw(num)),True))
+        Pc = np.array(PlotApriltagHomography(np.matmul(ciwf,self.ticf_corrected(num)),True))
+        
+        #print(P0)
+        #print(Pr)
+        #print(Pc)
+        
+        
+        raw_dist = np.linalg.norm(Pr - P0)
+        corrected_dist = np.linalg.norm(Pc - P0)
+        
+        
+        cam_normal = np.matmul(ciwf,np.array([0,0,1,1]).T)[0:3]
+        cam_eye = np.matmul(ciwf,np.array([0,0,0,1]).T)[0:3]
+        
+        #print(cam_eye)
+        #print(cam_normal)
+        
+        tag_dist = np.linalg.norm(P0-cam_eye)
+        
+        ba = P0-cam_eye
+        bc = cam_normal-cam_eye
+        
+        
+        cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+        tag_angle = np.arccos(cosine_angle)
+        
+        
+        
+        return [tag_dist,tag_angle,raw_dist,corrected_dist]
+    
     def correct(self,wrong_loc):
         #takes wrong_loc, a 3 element vector and corrects for refraction due to the water's surface
         #1. Finds intersection with the predefined water's surface
@@ -168,17 +209,17 @@ class Detections():
         true_loc = intersection_point+d_true*true_dir
         
         
-#         print('------------------------')
-#         print('wrong loc:         ',wrong_loc)
-#         print('intersection point:',intersection_point)
-#         print('illusory distance: ',d_illusory)
-#         print('true_direction:    ',true_dir)
-#         print('theta_i:           ',theta_i)
-#         print('theta_r:           ',theta_r)
-#         print('theta_r check:     ',math.asin(self.n*math.sin(theta_i)))
-#         print('true distance:     ',d_true)
-#         print('assumed depth:     ',d_illusory/self.n)
-#         print('true loc:          ',true_loc)
+        print('------------------------')
+#        print('wrong loc:         ',wrong_loc)
+#        print('intersection point:',intersection_point)
+        print('illusory distance: ',d_illusory)
+#        print('true_direction:    ',true_dir)
+#        print('theta_i:           ',theta_i)
+#        print('theta_r:           ',theta_r)
+#        print('theta_r check:     ',math.asin(self.n*math.sin(theta_i)))
+        print('true distance:     ',d_true)
+#        print('assumed depth:     ',d_illusory/self.n)
+#        print('true loc:          ',true_loc)
         
         return true_loc
            
